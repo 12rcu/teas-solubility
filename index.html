@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teas Solubility</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 1.5rem;
+            background-color: #1e1e1e;
+        }
+
+        header h1 {
+            margin: 0;
+            color: #ffffff;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            margin: 1rem;
+            gap: 1rem;
+
+        }
+
+        .result {
+            position: relative;
+            flex: 2;
+            border: 1px solid #555;
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+
+        .inputs {
+            flex: 1;
+            border: 1px solid #555;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .inputs .row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .inputs input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.5rem;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            border-radius: 0.5rem;
+            font: inherit;
+        }
+
+        .inputs input::placeholder {
+            color: #888;
+        }
+
+        .inputs input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .inputs input::-webkit-outer-spin-button,
+        .inputs input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .inputs input:focus {
+            outline: none;
+            border-color: #e0e0e0;
+        }
+
+        .inputs button {
+            margin-top: auto;
+            padding: 0.5rem 1rem;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            border-radius: 0.5rem;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .inputs button:hover {
+            background-color: #2a2a2a;
+        }
+
+        svg {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: calc(100% - 2rem);
+            height: calc(100% - 2rem);
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Teas Solubility</h1>
+</header>
+<main>
+    <div class="result">
+        <svg viewBox="0 0 100 80">
+            <g id="grid"></g>
+            <path d="M50 10, 90 70, 10 70 Z" stroke="black" stroke-width="0.75" fill="none" stroke-linejoin="round"/>
+            <g id="values"></g>
+        </svg>
+    </div>
+    <div class="inputs">
+        <div class="rows" id="rows"></div>
+        <button id="download-svg">Download SVG</button>
+    </div>
+</main>
+
+<script>
+    const svgY = 80;
+    const svgX = 100;
+
+    document.getElementById('download-svg').addEventListener('click', () => {
+        const svg = document.querySelector('.result svg');
+        const source = new XMLSerializer().serializeToString(svg);
+        const blob = new Blob([source], {type: 'image/svg+xml'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'teas-solubility.svg';
+        link.click();
+        URL.revokeObjectURL(url);
+    });
+
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const grid = document.getElementById('grid');
+    const values = document.getElementById('values');
+
+    function addCircle(x, y, color) {
+        const svgCircleElement = document.createElementNS(SVG_NS, 'circle');
+        svgCircleElement.setAttribute('cx', x);
+        svgCircleElement.setAttribute('cy', y);
+        svgCircleElement.setAttribute('r', 1);
+        svgCircleElement.setAttribute('fill', color);
+        values.appendChild(svgCircleElement);
+    }
+
+    function addLine(x1, y1, x2, y2) {
+        const line = document.createElementNS(SVG_NS, 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', '#888');
+        line.setAttribute('stroke-width', '0.2');
+        grid.appendChild(line);
+    }
+
+    function addLabel(x, y, text) {
+        const label = document.createElementNS(SVG_NS, 'text');
+        label.setAttribute('x', x);
+        label.setAttribute('y', y);
+        label.setAttribute('font-size', '3');
+        label.setAttribute('fill', '#ccc');
+        label.textContent = text;
+        grid.appendChild(label);
+    }
+
+    function getL1Offset(stepNum, count) {
+        const height = svgY - 20;
+        const width = (svgX / 2) - 10;
+        const heightOffset = 10
+        const widthOffset = svgX / 2
+
+        return {
+            x: widthOffset - (width / count) * stepNum,
+            y: (height / count) * stepNum + heightOffset,
+        }
+    }
+
+    function getL1LabelOffset(x, y) {
+        return {
+            x: x - 4,
+            y: y - 1,
+        }
+    }
+
+    function getL2Offset(stepNum, count) {
+        const height = svgY - 20;
+        const width = (svgX / 2) - 10;
+        const heightOffset = svgY - 10
+        const widthOffset = svgX - 10
+
+        return {
+            x: widthOffset - (width / count) * stepNum,
+            y: heightOffset - (height / count) * stepNum,
+        }
+    }
+
+    function getL2LabelOffset(x, y) {
+        return {
+            x: x + 1,
+            y: y - 1,
+        }
+    }
+
+    function getL3Offset(stepNum, count) {
+        const width = svgX - 20
+        const height = svgY - 10
+        return {
+            x: 10 + (width / count) * stepNum,
+            y: height,
+        }
+    }
+
+    function getL3LabelOffset(x, y) {
+        return {
+            x: x - 1.5,
+            y: y + 3,
+        }
+    }
+
+    function drawGrid(step, count) {
+        grid.replaceChildren();
+        let countDown = count - 1;
+        for (let countUp = 1; countUp < count; countUp++) {
+            const l1r = getL1Offset(countDown, count);
+            const l2r = getL2Offset(countDown, count);
+            const l1 = getL1Offset(countUp, count);
+            const l3 = getL3Offset(countUp, count);
+
+            addLine(l3.x, l3.y, l1r.x, l1r.y)
+            addLine(l3.x, l3.y, l2r.x, l2r.y)
+            addLine(l2r.x, l2r.y, l1.x, l1.y)
+
+            const labelL1 = getL1LabelOffset(l1r.x, l1r.y);
+            const labelL2 = getL2LabelOffset(l2r.x, l2r.y);
+            const labelL3 = getL3LabelOffset(l3.x, l3.y);
+            addLabel(labelL1.x, labelL1.y, step * countDown);
+            addLabel(labelL2.x, labelL2.y, step * countDown);
+            addLabel(labelL3.x, labelL3.y, step * countUp);
+
+            countDown--;
+        }
+    }
+
+    function addValue(dispersion, polar, hydrogen) {
+        const sum = dispersion + polar + hydrogen
+        const dispersionRate = dispersion / sum;
+        const polarRate = polar / sum;
+        const hydrogenRate = hydrogen / sum;
+
+        const width = svgX - 20
+        const height = svgY - 20
+
+        let offsetX = 10;
+        let offsetY = svgY - 10;
+
+        //move dispersion
+        offsetX += dispersionRate * width;
+
+        //move polar
+        offsetY -= polarRate * height;
+
+        //adjust for slope
+        offsetX += polarRate * (width / 2);
+
+        addCircle(offsetX, offsetY, "red")
+    }
+
+    const rows = document.getElementById('rows');
+
+    function createRow() {
+        const row = document.createElement('div');
+        row.className = 'row';
+        ['Dispersion', 'Polar', 'Hydrogen Bonding'].forEach(placeholder => {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.placeholder = placeholder;
+            input.addEventListener('input', onInput);
+            row.appendChild(input);
+        });
+        rows.appendChild(row);
+    }
+
+    function isRowFilled(row) {
+        return Array.from(row.querySelectorAll('input'), input => input.value !== '').every(Boolean);
+    }
+
+    function onInput() {
+        if (isRowFilled(rows.lastElementChild)) {
+            createRow();
+        }
+        updateValues();
+    }
+
+    function updateValues() {
+        values.replaceChildren();
+        rows.querySelectorAll('.row').forEach(row => {
+            const [dispersion, polar, hydrogen] = Array.from(row.querySelectorAll('input'), input => input.valueAsNumber);
+            if ([dispersion, polar, hydrogen].some(Number.isNaN)) {
+                return;
+            }
+            if (dispersion + polar + hydrogen === 0) {
+                return;
+            }
+            addValue(dispersion, polar, hydrogen);
+        });
+    }
+
+    createRow();
+
+    drawGrid(10, 10);
+</script>
+</body>
+</html>
