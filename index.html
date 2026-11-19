@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teas Solubility</title>
+    <!--suppress CssUnresolvedCustomProperty -->
     <style>
         body {
             margin: 0;
@@ -57,6 +58,10 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 0.5rem;
             margin-bottom: 0.5rem;
+        }
+
+        .inputs .row input {
+            border-color: var(--row-color);
         }
 
         .inputs input {
@@ -260,7 +265,7 @@
         }
     }
 
-    function addValue(dispersion, polar, hydrogen) {
+    function addValue(dispersion, polar, hydrogen, color) {
         const sum = dispersion + polar + hydrogen
         const dispersionRate = dispersion / sum;
         const polarRate = polar / sum;
@@ -281,14 +286,16 @@
         //adjust for slope
         offsetX += polarRate * (width / 2);
 
-        addCircle(offsetX, offsetY, "red")
+        addCircle(offsetX, offsetY, color)
     }
 
     const rows = document.getElementById('rows');
+    const rowColors = ['#bf6482', '#59b296', '#6d6ac8', '#ca8c52', '#86a8b5', '#b6a879', '#ad91b1', '#a2ad88'];
 
     function createRow() {
         const row = document.createElement('div');
         row.className = 'row';
+        row.style.setProperty('--row-color', rowColors[rows.children.length % rowColors.length]);
         ['Dispersion', 'Polar', 'Hydrogen Bonding'].forEach(placeholder => {
             const input = document.createElement('input');
             input.type = 'number';
@@ -320,7 +327,7 @@
             if (dispersion + polar + hydrogen === 0) {
                 return;
             }
-            addValue(dispersion, polar, hydrogen);
+            addValue(dispersion, polar, hydrogen, row.style.getPropertyValue('--row-color'));
         });
     }
 
